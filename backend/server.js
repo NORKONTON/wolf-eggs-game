@@ -1,10 +1,12 @@
 const express = require('express');
+const path = require('path');
 const app = express();
 const PORT = process.env.PORT || 8080;
 
 // Middleware
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+app.use(express.static(path.join(__dirname, 'public')));
 
 // Basic routes
 app.get('/', (req, res) => {
@@ -54,39 +56,14 @@ app.post('/api/user/connect', (req, res) => {
   });
 });
 
-// Telegram Mini App endpoint
+// Telegram Mini App endpoint - serve the full game
 app.get('/telegram-app', (req, res) => {
-  const html = `
-  <!DOCTYPE html>
-  <html>
-  <head>
-    <title>🐺 Wolf Pack Game</title>
-    <script src="https://telegram.org/js/telegram-web-app.js"></script>
-    <style>
-      body { font-family: Arial, sans-serif; text-align: center; padding: 20px; }
-      .game-title { color: #ff6b00; font-size: 24px; margin-bottom: 20px; }
-      .status { background: #f0f0f0; padding: 15px; border-radius: 10px; margin: 10px; }
-    </style>
-  </head>
-  <body>
-    <div class="game-title">🐺 Wolf Pack Game</div>
-    <div class="status">🎮 Game is running on Railway</div>
-    <div class="status">💰 TON Wallet: Ready for connection</div>
-    <div class="status">📱 Telegram Mini App: Active</div>
-    <div id="ton-connect"></div>
-    <script>
-      // Telegram Web App initialization
-      const tg = window.Telegram.WebApp;
-      tg.expand();
-      tg.ready();
-      
-      // TON Connect would go here
-      console.log('Telegram Mini App loaded');
-    </script>
-  </body>
-  </html>
-  `;
-  res.send(html);
+  res.sendFile(path.join(__dirname, 'public', 'telegram-game.html'));
+});
+
+// Also serve at root for easy access
+app.get('/game', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'telegram-game.html'));
 });
 
 // 404 handler

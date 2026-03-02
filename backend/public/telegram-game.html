@@ -1,0 +1,462 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🐺 Wolf Pack Game - Telegram Mini App</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: white;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            backdrop-filter: blur(10px);
+        }
+        
+        .game-title {
+            font-size: 32px;
+            font-weight: bold;
+            margin-bottom: 10px;
+            color: #FFD700;
+        }
+        
+        .game-subtitle {
+            font-size: 16px;
+            opacity: 0.9;
+            margin-bottom: 20px;
+        }
+        
+        .game-stats {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+        
+        .stat-card {
+            background: rgba(255, 255, 255, 0.15);
+            padding: 15px;
+            border-radius: 15px;
+            text-align: center;
+            backdrop-filter: blur(5px);
+        }
+        
+        .stat-value {
+            font-size: 24px;
+            font-weight: bold;
+            color: #FFD700;
+        }
+        
+        .stat-label {
+            font-size: 14px;
+            opacity: 0.8;
+            margin-top: 5px;
+        }
+        
+        .game-controls {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+        
+        .btn {
+            padding: 15px;
+            border: none;
+            border-radius: 15px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+        
+        .btn-primary {
+            background: #FF6B00;
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background: #FF8C00;
+            transform: translateY(-2px);
+        }
+        
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+        }
+        
+        .btn-secondary:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateY(-2px);
+        }
+        
+        .ton-connect {
+            background: rgba(0, 168, 232, 0.2);
+            padding: 20px;
+            border-radius: 15px;
+            margin-bottom: 30px;
+            border: 2px solid rgba(0, 168, 232, 0.5);
+        }
+        
+        .ton-status {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 15px;
+        }
+        
+        .ton-wallet {
+            font-family: monospace;
+            background: rgba(0, 0, 0, 0.3);
+            padding: 10px;
+            border-radius: 10px;
+            font-size: 12px;
+            word-break: break-all;
+            margin-top: 10px;
+        }
+        
+        .game-area {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 20px;
+            border-radius: 20px;
+            margin-bottom: 30px;
+            min-height: 200px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+        }
+        
+        .wolf-icon {
+            font-size: 60px;
+            margin-bottom: 20px;
+        }
+        
+        .game-message {
+            font-size: 18px;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        
+        .footer {
+            text-align: center;
+            padding: 20px;
+            font-size: 14px;
+            opacity: 0.7;
+            border-top: 1px solid rgba(255, 255, 255, 0.2);
+            margin-top: 30px;
+        }
+        
+        .telegram-user {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 20px;
+            padding: 15px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+        }
+        
+        .user-avatar {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+        }
+        
+        .user-info {
+            flex: 1;
+        }
+        
+        .user-name {
+            font-weight: bold;
+            font-size: 18px;
+        }
+        
+        .user-id {
+            font-size: 12px;
+            opacity: 0.7;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Telegram User Info -->
+        <div class="telegram-user" id="telegramUser">
+            <div class="user-avatar" id="userAvatar">👤</div>
+            <div class="user-info">
+                <div class="user-name" id="userName">Telegram User</div>
+                <div class="user-id" id="userId">ID: loading...</div>
+            </div>
+        </div>
+        
+        <!-- Game Header -->
+        <div class="header">
+            <div class="game-title">🐺 Wolf Pack Game</div>
+            <div class="game-subtitle">Play-to-Earn TON Game • Telegram Mini App</div>
+        </div>
+        
+        <!-- Game Stats -->
+        <div class="game-stats">
+            <div class="stat-card">
+                <div class="stat-value" id="totalWolves">1,000</div>
+                <div class="stat-label">Total Wolves</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="activePlayers">88</div>
+                <div class="stat-label">Active Players</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="tonBalance">11.51</div>
+                <div class="stat-label">TON in Pool</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="userWolves">0</div>
+                <div class="stat-label">Your Wolves</div>
+            </div>
+        </div>
+        
+        <!-- Game Area -->
+        <div class="game-area">
+            <div class="wolf-icon">🐺</div>
+            <div class="game-message" id="gameMessage">Welcome to Wolf Pack Game! Connect your TON wallet to start playing.</div>
+            <button class="btn btn-primary" id="playButton" onclick="startGame()">
+                🎮 Start Game
+            </button>
+        </div>
+        
+        <!-- TON Connect -->
+        <div class="ton-connect">
+            <div class="ton-status">
+                <div>
+                    <strong>💰 TON Wallet</strong>
+                    <div id="tonStatus">Not connected</div>
+                </div>
+                <button class="btn btn-secondary" id="connectTonButton" onclick="connectTON()">
+                    🔗 Connect TON
+                </button>
+            </div>
+            <div class="ton-wallet" id="tonWalletAddress">
+                Wallet: UQDW-GZlpaNOupnMe2xTiJfNDKH_aYShyz_18z_BYon9zKpe
+            </div>
+        </div>
+        
+        <!-- Game Controls -->
+        <div class="game-controls">
+            <button class="btn btn-secondary" onclick="buyWolf()">
+                🐺 Buy Wolf (1 TON)
+            </button>
+            <button class="btn btn-secondary" onclick="sellWolf()">
+                💰 Sell Wolf
+            </button>
+            <button class="btn btn-secondary" onclick="openChannel()">
+                📢 Join Channel
+            </button>
+            <button class="btn btn-secondary" onclick="openGitHub()">
+                📁 GitHub
+            </button>
+        </div>
+        
+        <!-- Footer -->
+        <div class="footer">
+            <div>Wolf Pack Game • Play-to-Earn on TON</div>
+            <div>Deployed on Railway • Telegram Mini App</div>
+            <div style="margin-top: 10px; font-size: 12px;">
+                <a href="https://t.me/WolfPackWeb3" style="color: #FFD700; text-decoration: none;">@WolfPackWeb3</a> • 
+                <a href="https://github.com/NORKONTON/wolf-eggs-game" style="color: #FFD700; text-decoration: none;">GitHub</a>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Telegram Web App Initialization
+        const tg = window.Telegram.WebApp;
+        
+        // Initialize Telegram Web App
+        tg.expand();
+        tg.ready();
+        
+        // Set Telegram user info
+        const user = tg.initDataUnsafe?.user;
+        if (user) {
+            document.getElementById('userName').textContent = `${user.first_name || ''} ${user.last_name || ''}`.trim() || 'Telegram User';
+            document.getElementById('userId').textContent = `ID: ${user.id}`;
+            
+            if (user.username) {
+                document.getElementById('userId').textContent += ` (@${user.username})`;
+            }
+        }
+        
+        // Game state
+        let gameState = {
+            wolves: 0,
+            tonBalance: 11.51844,
+            connected: false,
+            gameActive: false
+        };
+        
+        // Update game display
+        function updateGameDisplay() {
+            document.getElementById('userWolves').textContent = gameState.wolves;
+            document.getElementById('tonBalance').textContent = gameState.tonBalance.toFixed(2);
+            document.getElementById('tonStatus').textContent = gameState.connected ? 'Connected' : 'Not connected';
+            
+            if (gameState.connected) {
+                document.getElementById('connectTonButton').textContent = '✅ TON Connected';
+                document.getElementById('connectTonButton').classList.add('btn-primary');
+                document.getElementById('connectTonButton').classList.remove('btn-secondary');
+            }
+        }
+        
+        // TON Connect function
+        function connectTON() {
+            if (!gameState.connected) {
+                gameState.connected = true;
+                updateGameDisplay();
+                
+                // In real app, this would connect to TON wallet
+                document.getElementById('gameMessage').textContent = 'TON wallet connected! You can now buy wolves.';
+                tg.showPopup({
+                    title: 'TON Connected',
+                    message: 'Your TON wallet is now connected to the game.',
+                    buttons: [{ type: 'ok' }]
+                });
+            } else {
+                tg.showPopup({
+                    title: 'Already Connected',
+                    message: 'Your TON wallet is already connected.',
+                    buttons: [{ type: 'ok' }]
+                });
+            }
+        }
+        
+        // Start game
+        function startGame() {
+            gameState.gameActive = true;
+            document.getElementById('gameMessage').textContent = 'Game started! Buy your first wolf.';
+            document.getElementById('playButton').textContent = '🎮 Game Active';
+            
+            tg.HapticFeedback.impactOccurred('medium');
+        }
+        
+        // Buy wolf
+        function buyWolf() {
+            if (!gameState.connected) {
+                tg.showPopup({
+                    title: 'Connect TON First',
+                    message: 'Please connect your TON wallet to buy wolves.',
+                    buttons: [{ type: 'ok' }]
+                });
+                return;
+            }
+            
+            if (gameState.tonBalance >= 1) {
+                gameState.wolves++;
+                gameState.tonBalance -= 1;
+                updateGameDisplay();
+                
+                document.getElementById('gameMessage').textContent = `You bought a wolf! Total: ${gameState.wolves}`;
+                tg.HapticFeedback.notificationOccurred('success');
+                
+                // Send data to backend
+                fetch('/api/user/connect', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        telegramId: user?.id,
+                        action: 'buy_wolf',
+                        wolves: gameState.wolves
+                    })
+                });
+            } else {
+                tg.showPopup({
+                    title: 'Insufficient TON',
+                    message: 'Not enough TON in the pool.',
+                    buttons: [{ type: 'ok' }]
+                });
+            }
+        }
+        
+        // Sell wolf
+        function sellWolf() {
+            if (gameState.wolves > 0) {
+                gameState.wolves--;
+                gameState.tonBalance += 1.1; // 10% profit
+                updateGameDisplay();
+                
+                document.getElementById('gameMessage').textContent = `Wolf sold! Profit: 0.1 TON`;
+                tg.HapticFeedback.notificationOccurred('success');
+            } else {
+                tg.showPopup({
+                    title: 'No Wolves',
+                    message: 'You need to buy wolves first.',
+                    buttons: [{ type: 'ok' }]
+                });
+            }
+        }
+        
+        // Open Telegram channel
+        function openChannel() {
+            tg.openTelegramLink('https://t.me/WolfPackWeb3');
+        }
+        
+        // Open GitHub
+        function openGitHub() {
+            tg.openLink('https://github.com/NORKONTON/wolf-eggs-game');
+        }
+        
+        // Initialize
+        updateGameDisplay();
+        
+        // Send init data to backend
+        if (user) {
+            fetch('/api/user/connect', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    telegramId: user.id,
+                    username: user.username,
+                    firstName: user.first_name,
+                    lastName: user.last_name,
+                    action: 'init'
+                })
+            });
+        }
+        
+        console.log('🐺 Wolf Pack Game Telegram Mini App loaded');
+        console.log('Telegram User:', user);
+        console.log('Game State:', gameState);
+    </script>
+</body>
+</html>
