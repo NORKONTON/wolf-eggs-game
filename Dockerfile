@@ -5,6 +5,7 @@ FROM node:18-alpine
 WORKDIR /app
 
 # Copy package files from backend directory
+# TIMESTAMP: 2026-03-02 19:42 UTC - Fix Railway cache issue
 COPY backend/package.json ./
 
 # Install dependencies (works with or without package-lock.json)
