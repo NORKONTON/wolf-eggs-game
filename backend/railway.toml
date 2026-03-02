@@ -1,10 +1,10 @@
 [build]
 builder = "nixpacks"
-buildCommand = "npm install"
-startCommand = "npm start"
+buildCommand = "./build.sh"
+startCommand = "./start.sh"
 
 [deploy]
-startCommand = "npm start"
+startCommand = "./start.sh"
 healthcheckPath = "/health"
 
 [env]
