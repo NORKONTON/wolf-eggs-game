@@ -41,9 +41,42 @@ app.get('/api/telegram', (req, res) => {
   res.json({
     bot: '@wolfpackgame_bot',
     channel: '@WolfPackWeb3',
-    miniApp: 'https://wolf-eggs-game-production.up.railway.app',
+    miniApp: 'https://wolf-eggs-game-production.up.railway.app/telegram-app',
+    game: 'Wolf Catches Eggs',
     users: 88
   });
+});
+
+// Game API endpoints for arcade game
+app.post('/api/game/start', (req, res) => {
+  const { telegramId, game } = req.body;
+  res.json({
+    success: true,
+    message: 'Game started',
+    game: game || 'wolf_catches_eggs',
+    timestamp: new Date().toISOString(),
+    playerId: telegramId || 'anonymous'
+  });
+});
+
+app.post('/api/game/end', (req, res) => {
+  const { telegramId, game, score, eggsCaught, tonEarned, lives } = req.body;
+  
+  // In production, save to database
+  const gameResult = {
+    success: true,
+    message: 'Game results saved',
+    game: game || 'wolf_catches_eggs',
+    playerId: telegramId || 'anonymous',
+    score: score || 0,
+    eggsCaught: eggsCaught || 0,
+    tonEarned: tonEarned || 0,
+    lives: lives || 0,
+    timestamp: new Date().toISOString(),
+    rank: score > 1000 ? 'gold' : score > 500 ? 'silver' : 'bronze'
+  };
+  
+  res.json(gameResult);
 });
 
 app.post('/api/user/connect', (req, res) => {
@@ -56,13 +89,18 @@ app.post('/api/user/connect', (req, res) => {
   });
 });
 
-// Telegram Mini App endpoint - serve the full game
+// Telegram Mini App endpoint - serve the arcade game
 app.get('/telegram-app', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'telegram-game.html'));
+  res.sendFile(path.join(__dirname, 'public', 'wolf-catches-eggs.html'));
 });
 
 // Also serve at root for easy access
 app.get('/game', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'wolf-catches-eggs.html'));
+});
+
+// Original game (optional)
+app.get('/original-game', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'telegram-game.html'));
 });
 

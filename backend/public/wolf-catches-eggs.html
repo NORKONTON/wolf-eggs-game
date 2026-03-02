@@ -1,0 +1,821 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🐺 Wolf Catches Eggs - Telegram Game</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            color: white;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 800px;
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 20px;
+            width: 100%;
+        }
+        
+        .game-title {
+            font-size: 32px;
+            font-weight: bold;
+            color: #FFD700;
+            margin-bottom: 10px;
+        }
+        
+        .game-subtitle {
+            font-size: 16px;
+            opacity: 0.8;
+            margin-bottom: 20px;
+        }
+        
+        /* Game Canvas */
+        .game-container {
+            position: relative;
+            width: 100%;
+            max-width: 600px;
+            margin: 0 auto 30px;
+        }
+        
+        #gameCanvas {
+            width: 100%;
+            height: 400px;
+            background: #0f3460;
+            border-radius: 15px;
+            border: 3px solid #FFD700;
+            display: block;
+        }
+        
+        /* Game Stats */
+        .game-stats {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 15px;
+            width: 100%;
+            max-width: 600px;
+            margin-bottom: 20px;
+        }
+        
+        .stat-card {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 15px;
+            border-radius: 10px;
+            text-align: center;
+            backdrop-filter: blur(5px);
+        }
+        
+        .stat-value {
+            font-size: 24px;
+            font-weight: bold;
+            color: #FFD700;
+        }
+        
+        .stat-label {
+            font-size: 12px;
+            opacity: 0.8;
+            margin-top: 5px;
+        }
+        
+        /* Controls */
+        .controls {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+            width: 100%;
+            max-width: 600px;
+            margin-bottom: 20px;
+        }
+        
+        .btn {
+            padding: 15px;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, #FF6B00 0%, #FF8C00 100%);
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(255, 107, 0, 0.4);
+        }
+        
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.15);
+            color: white;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+        }
+        
+        .btn-secondary:hover {
+            background: rgba(255, 255, 255, 0.25);
+            transform: translateY(-2px);
+        }
+        
+        /* Instructions */
+        .instructions {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 20px;
+            border-radius: 15px;
+            margin-bottom: 30px;
+            width: 100%;
+            max-width: 600px;
+        }
+        
+        .instructions h3 {
+            color: #FFD700;
+            margin-bottom: 10px;
+        }
+        
+        .instructions ul {
+            padding-left: 20px;
+        }
+        
+        .instructions li {
+            margin-bottom: 8px;
+            opacity: 0.9;
+        }
+        
+        /* Footer */
+        .footer {
+            text-align: center;
+            padding: 20px;
+            font-size: 14px;
+            opacity: 0.7;
+            width: 100%;
+            border-top: 1px solid rgba(255, 255, 255, 0.2);
+            margin-top: 20px;
+        }
+        
+        /* Game Over Screen */
+        .game-over {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.85);
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            border-radius: 15px;
+            z-index: 10;
+        }
+        
+        .game-over h2 {
+            font-size: 36px;
+            color: #FFD700;
+            margin-bottom: 20px;
+        }
+        
+        .game-over-score {
+            font-size: 48px;
+            font-weight: bold;
+            color: white;
+            margin-bottom: 30px;
+        }
+        
+        /* Mobile Controls */
+        .mobile-controls {
+            display: none;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            width: 100%;
+            max-width: 300px;
+            margin-top: 20px;
+        }
+        
+        .mobile-btn {
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.2);
+            border: none;
+            border-radius: 10px;
+            font-size: 24px;
+            color: white;
+            cursor: pointer;
+        }
+        
+        @media (max-width: 768px) {
+            .mobile-controls {
+                display: grid;
+            }
+            
+            .controls {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <div class="game-title">🐺 Wolf Catches Eggs</div>
+            <div class="game-subtitle">Arcade Game • Catch eggs, earn TON • Telegram Mini App</div>
+        </div>
+        
+        <!-- Game Stats -->
+        <div class="game-stats">
+            <div class="stat-card">
+                <div class="stat-value" id="score">0</div>
+                <div class="stat-label">Score</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="eggs">0</div>
+                <div class="stat-label">Eggs Caught</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="lives">3</div>
+                <div class="stat-label">Lives</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="tonEarned">0.00</div>
+                <div class="stat-label">TON Earned</div>
+            </div>
+        </div>
+        
+        <!-- Game Canvas -->
+        <div class="game-container">
+            <canvas id="gameCanvas" width="600" height="400"></canvas>
+            
+            <!-- Game Over Screen -->
+            <div class="game-over" id="gameOverScreen">
+                <h2>Game Over!</h2>
+                <div class="game-over-score" id="finalScore">Score: 0</div>
+                <div class="game-over-score" id="finalTON">TON: 0.00</div>
+                <button class="btn btn-primary" onclick="restartGame()" style="margin-top: 20px;">
+                    🔄 Play Again
+                </button>
+            </div>
+        </div>
+        
+        <!-- Mobile Controls (for touch devices) -->
+        <div class="mobile-controls">
+            <button class="mobile-btn" onmousedown="moveLeft()" ontouchstart="moveLeft()" onmouseup="stopMove()" ontouchend="stopMove()">⬅️</button>
+            <button class="mobile-btn" onclick="pauseGame()">⏸️</button>
+            <button class="mobile-btn" onmousedown="moveRight()" ontouchstart="moveRight()" onmouseup="stopMove()" ontouchend="stopMove()">➡️</button>
+        </div>
+        
+        <!-- Controls -->
+        <div class="controls">
+            <button class="btn btn-primary" onclick="startGame()" id="startButton">
+                🎮 Start Game
+            </button>
+            <button class="btn btn-secondary" onclick="pauseGame()" id="pauseButton">
+                ⏸️ Pause
+            </button>
+            <button class="btn btn-secondary" onclick="connectTON()" id="tonButton">
+                🔗 Connect TON
+            </button>
+            <button class="btn btn-secondary" onclick="withdrawTON()">
+                💰 Withdraw TON
+            </button>
+        </div>
+        
+        <!-- Instructions -->
+        <div class="instructions">
+            <h3>🎯 How to Play:</h3>
+            <ul>
+                <li><strong>Move the wolf</strong> left/right to catch falling eggs</li>
+                <li><strong>Each egg</strong> = +10 points = +0.01 TON</li>
+                <li><strong>Avoid rocks</strong> - they take 1 life</li>
+                <li><strong>Combo bonus</strong>: Catch 3 eggs in a row = +50 points</li>
+                <li><strong>Daily rewards</strong>: Top 10 players earn bonus TON</li>
+                <li><strong>Connect TON wallet</strong> to withdraw earnings</li>
+            </ul>
+        </div>
+        
+        <!-- Footer -->
+        <div class="footer">
+            <div>🐺 Wolf Catches Eggs • Play-to-Earn Arcade on TON</div>
+            <div>Deployed on Railway • Telegram Mini App</div>
+            <div style="margin-top: 10px; font-size: 12px;">
+                <a href="https://t.me/WolfPackWeb3" style="color: #FFD700; text-decoration: none;">@WolfPackWeb3</a> • 
+                <a href="https://github.com/NORKONTON/wolf-eggs-game" style="color: #FFD700; text-decoration: none;">GitHub</a>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Telegram Web App Initialization
+        const tg = window.Telegram.WebApp;
+        tg.expand();
+        tg.ready();
+        
+        // Game variables
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        
+        let gameState = {
+            score: 0,
+            eggsCaught: 0,
+            lives: 3,
+            tonEarned: 0,
+            gameActive: false,
+            gamePaused: false,
+            tonConnected: false,
+            playerName: 'Player'
+        };
+        
+        // Wolf properties
+        const wolf = {
+            x: canvas.width / 2 - 25,
+            y: canvas.height - 60,
+            width: 50,
+            height: 50,
+            speed: 8,
+            movingLeft: false,
+            movingRight: false
+        };
+        
+        // Eggs and rocks arrays
+        let eggs = [];
+        let rocks = [];
+        
+        // Game objects
+        class Egg {
+            constructor() {
+                this.x = Math.random() * (canvas.width - 30);
+                this.y = 0;
+                this.width = 30;
+                this.height = 30;
+                this.speed = 2 + Math.random() * 3;
+                this.color = `hsl(${Math.random() * 60 + 30}, 100%, 60%)`;
+            }
+            
+            update() {
+                this.y += this.speed;
+            }
+            
+            draw() {
+                ctx.fillStyle = this.color;
+                ctx.beginPath();
+                ctx.ellipse(this.x + this.width/2, this.y + this.height/2, this.width/2, this.height/2, 0, 0, Math.PI * 2);
+                ctx.fill();
+                
+                // Egg shine
+                ctx.fillStyle = 'rgba(255, 255, 255, 0.3)';
+                ctx.beginPath();
+                ctx.ellipse(this.x + this.width/3, this.y + this.height/3, this.width/6, this.height/6, 0, 0, Math.PI * 2);
+                ctx.fill();
+            }
+            
+            collidesWith(object) {
+                return this.x < object.x + object.width &&
+                       this.x + this.width > object.x &&
+                       this.y < object.y + object.height &&
+                       this.y + this.height > object.y;
+            }
+        }
+        
+        class Rock {
+            constructor() {
+                this.x = Math.random() * (canvas.width - 40);
+                this.y = 0;
+                this.width = 40;
+                this.height = 40;
+                this.speed = 3 + Math.random() * 2;
+                this.color = '#888';
+            }
+            
+            update() {
+                this.y += this.speed;
+            }
+            
+            draw() {
+                ctx.fillStyle = this.color;
+                ctx.beginPath();
+                ctx.arc(this.x + this.width/2, this.y + this.height/2, this.width/2, 0, Math.PI * 2);
+                ctx.fill();
+                
+                // Rock texture
+                ctx.fillStyle = '#666';
+                ctx.beginPath();
+                ctx.arc(this.x + this.width/3, this.y + this.height/3, 5, 0, Math.PI * 2);
+                ctx.arc(this.x + this.width*2/3, this.y + this.height*2/3, 4, 0, Math.PI * 2);
+                ctx.fill();
+            }
+        }
+        
+        // Update game display
+        function updateDisplay() {
+            document.getElementById('score').textContent = gameState.score;
+            document.getElementById('eggs').textContent = gameState.eggsCaught;
+            document.getElementById('lives').textContent = gameState.lives;
+            document.getElementById('tonEarned').textContent = gameState.tonEarned.toFixed(2);
+            
+            // Update TON button
+            const tonButton = document.getElementById('tonButton');
+            if (gameState.tonConnected) {
+                tonButton.textContent = '✅ TON Connected';
+                tonButton.classList.add('btn-primary');
+                tonButton.classList.remove('btn-secondary');
+            }
+        }
+        
+        // Draw wolf
+        function drawWolf() {
+            // Wolf body
+            ctx.fillStyle = '#8B4513';
+            ctx.beginPath();
+            ctx.ellipse(wolf.x + wolf.width/2, wolf.y + wolf.height/2, wolf.width/2, wolf.height/2, 0, 0, Math.PI * 2);
+            ctx.fill();
+            
+            // Wolf ears
+            ctx.fillStyle = '#5D4037';
+            ctx.beginPath();
+            ctx.ellipse(wolf.x + wolf.width/3, wolf.y + wolf.height/4, 8, 10, 0, 0, Math.PI * 2);
+            ctx.ellipse(wolf.x + wolf.width*2/3, wolf.y + wolf.height/4, 8, 10, 0, 0, Math.PI * 2);
+            ctx.fill();
+            
+            // Wolf eyes
+            ctx.fillStyle = 'yellow';
+            ctx.beginPath();
+            ctx.arc(wolf.x + wolf.width/3, wolf.y + wolf.height/2, 5, 0, Math.PI * 2);
+            ctx.arc(wolf.x + wolf.width*2/3, wolf.y + wolf.height/2, 5, 0, Math.PI * 2);
+            ctx.fill();
+            
+            ctx.fillStyle = 'black';
+            ctx.beginPath();
+            ctx.arc(wolf.x + wolf.width/3, wolf.y + wolf.height/2, 2, 0, Math.PI * 2);
+            ctx.arc(wolf.x + wolf.width*2/3, wolf.y + wolf.height/2, 2, 0, Math.PI * 2);
+            ctx.fill();
+            
+            // Wolf mouth (smiling when game active)
+            ctx.strokeStyle = 'black';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            if (gameState.gameActive && !gameState.gamePaused) {
+                ctx.arc(wolf.x + wolf.width/2, wolf.y + wolf.height*3/4, 10, 0.2, Math.PI - 0.2);
+            } else {
+                ctx.moveTo(wolf.x + wolf.width/3, wolf.y + wolf.height*3/4);
+                ctx.lineTo(wolf.x + wolf.width*2/3, wolf.y + wolf.height*3/4);
+            }
+            ctx.stroke();
+        }
+        
+        // Game loop
+        function gameLoop() {
+            if (!gameState.gameActive || gameState.gamePaused) return;
+            
+            // Clear canvas
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            // Draw background
+            ctx.fillStyle = '#0f3460';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            // Draw grass
+            ctx.fillStyle = '#2E7D32';
+            ctx.fillRect(0, canvas.height - 10, canvas.width, 10);
+            
+            // Move wolf
+            if (wolf.movingLeft && wolf.x > 0) {
+                wolf.x -= wolf.speed;
+            }
+            if (wolf.movingRight && wolf.x < canvas.width - wolf.width) {
+                wolf.x += wolf.speed;
+            }
+            
+            // Spawn eggs and rocks randomly
+            if (Math.random() < 0.03) { // 3% chance per frame
+                eggs.push(new Egg());
+            }
+            if (Math.random() < 0.01) { // 1% chance per frame
+                rocks.push(new Rock());
+            }
+            
+            // Update and draw eggs
+            for (let i = eggs.length - 1; i >= 0; i--) {
+                eggs[i].update();
+                eggs[i].draw();
+                
+                // Check collision with wolf
+                if (eggs[i].collidesWith(wolf)) {
+                    // Egg caught!
+                    gameState.score += 10;
+                    gameState.eggsCaught++;
+                    gameState.tonEarned += 0.01;
+                    
+                    // Combo bonus
+                    if (gameState.eggsCaught % 3 === 0) {
+                        gameState.score += 50;
+                        gameState.tonEarned += 0.05;
+                        
+                        // Visual feedback for combo
+                        ctx.fillStyle = 'gold';
+                        ctx.font = '20px Arial';
+                        ctx.fillText('COMBO! +50', canvas.width/2 - 50, 50);
+                    }
+                    
+                    // Remove egg
+                    eggs.splice(i, 1);
+                    
+                    // Haptic feedback
+                    if (tg && tg.HapticFeedback) {
+                        tg.HapticFeedback.impactOccurred('light');
+                    }
+                }
+                
+                // Remove eggs that fell off screen
+                if (eggs[i].y > canvas.height) {
+                    eggs.splice(i, 1);
+                }
+            }
+            
+            // Update and draw rocks
+            for (let i = rocks.length - 1; i >= 0; i--) {
+                rocks[i].update();
+                rocks[i].draw();
+                
+                // Check collision with wolf
+                if (rocks[i].collidesWith(wolf)) {
+                    // Rock hit!
+                    gameState.lives--;
+                    
+                    // Remove rock
+                    rocks.splice(i, 1);
+                    
+                    // Haptic feedback
+                    if (tg && tg.HapticFeedback) {
+                        tg.HapticFeedback.impactOccurred('heavy');
+                    }
+                    
+                    // Check game over
+                    if (gameState.lives <= 0) {
+                        gameOver();
+                    }
+                }
+                
+                // Remove rocks that fell off screen
+                if (rocks[i].y > canvas.height) {
+                    rocks.splice(i, 1);
+                }
+            }
+            
+            // Draw wolf
+            drawWolf();
+            
+            // Draw score on canvas
+            ctx.fillStyle = 'white';
+            ctx.font = '16px Arial';
+            ctx.fillText(`Score: ${gameState.score}`, 10, 30);
+            ctx.fillText(`Lives: ${gameState.lives}`, 10, 60);
+            ctx.fillText(`TON: ${gameState.tonEarned.toFixed(2)}`, 10, 90);
+            
+            // Update display
+            updateDisplay();
+            
+            // Continue game loop
+            requestAnimationFrame(gameLoop);
+        }
+        
+        // Start game
+        function startGame() {
+            if (gameState.gameActive) return;
+            
+            gameState.gameActive = true;
+            gameState.gamePaused = false;
+            gameState.score = 0;
+            gameState.eggsCaught = 0;
+            gameState.lives = 3;
+            
+            eggs = [];
+            rocks = [];
+            
+            document.getElementById('startButton').textContent = '🎮 Game Running';
+            document.getElementById('pauseButton').textContent = '⏸️ Pause';
+            document.getElementById('gameOverScreen').style.display = 'none';
+            
+            // Start game loop
+            gameLoop();
+            
+            // Send game start event to backend
+            if (tg.initDataUnsafe?.user) {
+                fetch('/api/game/start', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        telegramId: tg.initDataUnsafe.user.id,
+                        game: 'wolf_catches_eggs',
+                        action: 'start'
+                    })
+                });
+            }
+        }
+        
+        // Pause/resume game
+        function pauseGame() {
+            if (!gameState.gameActive) return;
+            
+            gameState.gamePaused = !gameState.gamePaused;
+            
+            if (gameState.gamePaused) {
+                document.getElementById('pauseButton').textContent = '▶️ Resume';
+            } else {
+                document.getElementById('pauseButton').textContent = '⏸️ Pause';
+                gameLoop(); // Resume game loop
+            }
+        }
+        
+        // Game over
+        function gameOver() {
+            gameState.gameActive = false;
+            
+            // Show game over screen
+            document.getElementById('finalScore').textContent = `Score: ${gameState.score}`;
+            document.getElementById('finalTON').textContent = `TON Earned: ${gameState.tonEarned.toFixed(2)}`;
+            document.getElementById('gameOverScreen').style.display = 'flex';
+            
+            // Save score to backend
+            if (tg.initDataUnsafe?.user) {
+                fetch('/api/game/end', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        telegramId: tg.initDataUnsafe.user.id,
+                        game: 'wolf_catches_eggs',
+                        score: gameState.score,
+                        eggsCaught: gameState.eggsCaught,
+                        tonEarned: gameState.tonEarned,
+                        lives: gameState.lives
+                    })
+                });
+            }
+            
+            // Show congratulations for high score
+            if (gameState.score > 1000) {
+                tg.showPopup({
+                    title: '🎉 Amazing Score!',
+                    message: `You earned ${gameState.tonEarned.toFixed(2)} TON! Connect wallet to withdraw.`,
+                    buttons: [{ type: 'ok' }]
+                });
+            }
+        }
+        
+        // Restart game
+        function restartGame() {
+            startGame();
+        }
+        
+        // Movement functions
+        function moveLeft() {
+            wolf.movingLeft = true;
+        }
+        
+        function moveRight() {
+            wolf.movingRight = true;
+        }
+        
+        function stopMove() {
+            wolf.movingLeft = false;
+            wolf.movingRight = false;
+        }
+        
+        // Keyboard controls
+        document.addEventListener('keydown', (e) => {
+            if (!gameState.gameActive || gameState.gamePaused) return;
+            
+            if (e.key === 'ArrowLeft' || e.key === 'a') {
+                moveLeft();
+            } else if (e.key === 'ArrowRight' || e.key === 'd') {
+                moveRight();
+            } else if (e.key === ' ') {
+                pauseGame();
+            }
+        });
+        
+        document.addEventListener('keyup', (e) => {
+            if (e.key === 'ArrowLeft' || e.key === 'a') {
+                wolf.movingLeft = false;
+            } else if (e.key === 'ArrowRight' || e.key === 'd') {
+                wolf.movingRight = false;
+            }
+        });
+        
+        // TON Connect
+        function connectTON() {
+            if (!gameState.tonConnected) {
+                gameState.tonConnected = true;
+                updateDisplay();
+                
+                tg.showPopup({
+                    title: 'TON Connected',
+                    message: 'Your TON wallet is now connected. You can withdraw your earnings!',
+                    buttons: [{ type: 'ok' }]
+                });
+                
+                // In real app, this would connect to TON wallet
+                console.log('TON wallet connected (simulated)');
+            } else {
+                tg.showPopup({
+                    title: 'Already Connected',
+                    message: 'Your TON wallet is already connected.',
+                    buttons: [{ type: 'ok' }]
+                });
+            }
+        }
+        
+        // Withdraw TON
+        function withdrawTON() {
+            if (!gameState.tonConnected) {
+                tg.showPopup({
+                    title: 'Connect TON First',
+                    message: 'Please connect your TON wallet to withdraw earnings.',
+                    buttons: [{ type: 'ok' }]
+                });
+                return;
+            }
+            
+            if (gameState.tonEarned > 0) {
+                tg.showPopup({
+                    title: 'Withdraw TON',
+                    message: `Withdraw ${gameState.tonEarned.toFixed(2)} TON to your wallet?`,
+                    buttons: [
+                        { type: 'ok', text: 'Withdraw' },
+                        { type: 'cancel', text: 'Cancel' }
+                    ]
+                }).then((result) => {
+                    if (result === 'ok') {
+                        // Simulate withdrawal
+                        tg.showPopup({
+                            title: 'Success!',
+                            message: `${gameState.tonEarned.toFixed(2)} TON sent to your wallet.`,
+                            buttons: [{ type: 'ok' }]
+                        });
+                        
+                        // Reset earned amount
+                        gameState.tonEarned = 0;
+                        updateDisplay();
+                    }
+                });
+            } else {
+                tg.showPopup({
+                    title: 'No TON to Withdraw',
+                    message: 'Play more to earn TON!',
+                    buttons: [{ type: 'ok' }]
+                });
+            }
+        }
+        
+        // Initialize
+        updateDisplay();
+        
+        // Set Telegram user info
+        if (tg.initDataUnsafe?.user) {
+            const user = tg.initDataUnsafe.user;
+            gameState.playerName = user.first_name || 'Player';
+            
+            // Send user info to backend
+            fetch('/api/user/connect', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    telegramId: user.id,
+                    username: user.username,
+                    firstName: user.first_name,
+                    lastName: user.last_name,
+                    action: 'wolf_game_init'
+                })
+            });
+        }
+        
+        console.log('🐺 Wolf Catches Eggs game loaded');
+        console.log('Game State:', gameState);
+        
+        // Draw initial wolf
+        drawWolf();
+    </script>
+</body>
+</html>
