@@ -14,9 +14,10 @@
     "dotenv": "^16.0.3"
   },
   "engines": {
-    "node": ">=18.0.0"
+    "node": "18.x",
+    "npm": "9.x"
   },
-  "keywords": ["ton", "telegram", "game", "play-to-earn"],
+  "keywords": ["ton", "telegram", "game", "play-to-earn", "nodejs"],
   "author": "NORKONTON",
   "license": "MIT"
 }

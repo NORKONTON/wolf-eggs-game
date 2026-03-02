@@ -1,11 +1,13 @@
 [phases.setup]
-cmds = ["./build.sh"]
-
-[phases.build]
-cmds = ["echo '🚀 Wolf Pack Game built successfully!'"]
+cmds = ["npm install"]
 
 [start]
-cmd = "./start.sh"
+cmd = "npm start"
+
+[build]
+builder = "nixpacks"
+buildCommand = "npm install"
+startCommand = "npm start"
 
 [variables]
 NODE_ENV = "production"
