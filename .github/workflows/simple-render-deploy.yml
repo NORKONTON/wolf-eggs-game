@@ -1,0 +1,99 @@
+name: Simple Render Deploy
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+      
+    - name: Deploy to Render via Blueprint
+      env:
+        RENDER_API_KEY: ${{ secrets.RENDER_API_KEY }}
+      run: |
+        echo "🚀 Starting Render.com deployment..."
+        
+        # Check if API key is set
+        if [ -z "$RENDER_API_KEY" ]; then
+          echo "❌ ERROR: RENDER_API_KEY secret is not set!"
+          echo "Please add RENDER_API_KEY to GitHub Secrets:"
+          echo "1. Go to Repository Settings → Secrets and variables → Actions"
+          echo "2. Click 'New repository secret'"
+          echo "3. Name: RENDER_API_KEY"
+          echo "4. Value: Your Render.com API key (rnd_...)"
+          echo "5. Click 'Add secret'"
+          exit 1
+        fi
+        
+        echo "✅ RENDER_API_KEY is set"
+        
+        # Check if render.yaml exists
+        if [ ! -f "render.yaml" ]; then
+          echo "❌ ERROR: render.yaml not found!"
+          exit 1
+        fi
+        
+        echo "✅ render.yaml found"
+        
+        # Trigger Render Blueprint deployment
+        echo "📦 Triggering Render Blueprint deployment..."
+        
+        DEPLOY_RESPONSE=$(curl -s -X POST "https://api.render.com/v1/blueprints" \
+          -H "Authorization: Bearer $RENDER_API_KEY" \
+          -H "Content-Type: application/json" \
+          -d '{
+            "repo": "https://github.com/NORKONTON/wolf-eggs-game",
+            "branch": "main",
+            "name": "wolf-pack-game-deployment"
+          }')
+        
+        echo "📋 Deployment response:"
+        echo "$DEPLOY_RESPONSE" | jq .
+        
+        # Check if deployment was successful
+        if echo "$DEPLOY_RESPONSE" | grep -q "id"; then
+          BLUEPRINT_ID=$(echo "$DEPLOY_RESPONSE" | jq -r '.id')
+          echo "✅ Deployment triggered successfully!"
+          echo "🔗 Blueprint ID: $BLUEPRINT_ID"
+          echo "🌐 View deployment: https://dashboard.render.com/blueprints/$BLUEPRINT_ID"
+          
+          # Wait a bit and try to get service URL
+          echo "⏳ Waiting for service initialization..."
+          sleep 30
+          
+          # Try to get service URL
+          SERVICES_RESPONSE=$(curl -s -X GET "https://api.render.com/v1/services" \
+            -H "Authorization: Bearer $RENDER_API_KEY")
+          
+          SERVICE_URL=$(echo "$SERVICES_RESPONSE" | jq -r '.[] | select(.name == "wolf-pack-game") | .url')
+          
+          if [ -n "$SERVICE_URL" ] && [ "$SERVICE_URL" != "null" ]; then
+            echo "🌐 Game URL: $SERVICE_URL"
+            echo "🎮 Game will be available at: $SERVICE_URL"
+          else
+            echo "⚠️ Service URL not available yet. Check Render dashboard in a few minutes."
+            echo "📊 Dashboard: https://dashboard.render.com"
+          fi
+        else
+          echo "⚠️ Deployment may already be in progress or Blueprint already exists"
+          echo "ℹ️ Render will automatically deploy changes from GitHub"
+          echo "📊 Check status: https://dashboard.render.com"
+        fi
+        
+    - name: Send Telegram notification
+      if: success()
+      env:
+        TELEGRAM_BOT_TOKEN: "8634703769:AAGVECnXD_iD_bLa0gAoib6jCZjy42-uA1U"
+        TELEGRAM_CHAT_ID: "5815938420"
+      run: |
+        echo "📱 Sending Telegram notification..."
+        curl -s -X POST "https://api.telegram.org/bot$TELEGRAM_BOT_TOKEN/sendMessage" \
+          -d "chat_id=$TELEGRAM_CHAT_ID" \
+          -d "text=🚀 Wolf Pack Game deployment started via GitHub Actions!%0A📊 Check status: https://github.com/NORKONTON/wolf-eggs-game/actions%0A🌐 Render Dashboard: https://dashboard.render.com" \
+          -d "parse_mode=HTML"

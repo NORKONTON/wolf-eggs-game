@@ -1,0 +1,146 @@
+name: Deploy to Render.com
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:  # Дозволяє запускати вручну
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+      
+    - name: Setup Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: '18'
+        cache: 'npm'
+        
+    - name: Install dependencies
+      run: npm ci
+      
+    - name: Run tests
+      run: npm test
+      
+    - name: Deploy to Render.com
+      env:
+        RENDER_API_KEY: ${{ secrets.RENDER_API_KEY }}
+      run: |
+        # Перевірка наявності API ключа
+        if [ -z "$RENDER_API_KEY" ]; then
+          echo "❌ RENDER_API_KEY не налаштовано"
+          echo "Додайте секрет RENDER_API_KEY в GitHub Secrets"
+          exit 1
+        fi
+        
+        echo "🚀 Починаємо деплой на Render.com..."
+        
+        # Перевіряємо, чи сервіс вже існує
+        SERVICE_ID=$(curl -s -X GET "https://api.render.com/v1/services" \
+          -H "Authorization: Bearer $RENDER_API_KEY" \
+          -H "Content-Type: application/json" | \
+          jq -r '.[] | select(.name == "wolf-pack-game") | .id')
+        
+        if [ -n "$SERVICE_ID" ]; then
+          echo "✅ Сервіс вже існує (ID: $SERVICE_ID)"
+          echo "🔄 Оновлюємо сервіс..."
+          
+          # Оновлення існуючого сервісу
+          curl -X PATCH "https://api.render.com/v1/services/$SERVICE_ID" \
+            -H "Authorization: Bearer $RENDER_API_KEY" \
+            -H "Content-Type: application/json" \
+            -d '{
+              "autoDeploy": "yes",
+              "branch": "main"
+            }'
+        else
+          echo "🆕 Створюємо новий сервіс..."
+          
+          # Створення нового сервісу
+          curl -X POST "https://api.render.com/v1/services" \
+            -H "Authorization: Bearer $RENDER_API_KEY" \
+            -H "Content-Type: application/json" \
+            -d '{
+              "name": "wolf-pack-game",
+              "type": "web",
+              "repo": "https://github.com/NORKONTON/wolf-eggs-game",
+              "branch": "main",
+              "autoDeploy": "yes",
+              "envVars": [
+                {
+                  "key": "NODE_ENV",
+                  "value": "production"
+                },
+                {
+                  "key": "PORT",
+                  "value": "8080"
+                },
+                {
+                  "key": "TELEGRAM_BOT_TOKEN",
+                  "value": "8634703769:AAGVECnXD_iD_bLa0gAoib6jCZjy42-uA1U"
+                }
+              ],
+              "plan": "starter",
+              "region": "oregon"
+            }'
+        fi
+        
+        echo "✅ Деплой запущено!"
+        echo "📊 Моніторинг: https://dashboard.render.com"
+        
+    - name: Get deployment status
+      env:
+        RENDER_API_KEY: ${{ secrets.RENDER_API_KEY }}
+      run: |
+        echo "⏳ Чекаємо на статус деплою..."
+        sleep 30
+        
+        # Отримуємо статус останнього деплою
+        SERVICE_ID=$(curl -s -X GET "https://api.render.com/v1/services" \
+          -H "Authorization: Bearer $RENDER_API_KEY" \
+          -H "Content-Type: application/json" | \
+          jq -r '.[] | select(.name == "wolf-pack-game") | .id')
+        
+        if [ -n "$SERVICE_ID" ]; then
+          DEPLOY_STATUS=$(curl -s -X GET "https://api.render.com/v1/services/$SERVICE_ID/deploys" \
+            -H "Authorization: Bearer $RENDER_API_KEY" | \
+            jq -r '.[0].status')
+          
+          echo "📈 Статус деплою: $DEPLOY_STATUS"
+          
+          if [ "$DEPLOY_STATUS" = "live" ]; then
+            echo "🎉 Деплой успішний! Гра доступна за адресою:"
+            echo "🌐 https://wolf-pack-game.onrender.com"
+          else
+            echo "⚠️ Деплой ще триває. Статус: $DEPLOY_STATUS"
+          fi
+        fi
+        
+    - name: Notify Telegram
+      if: success()
+      env:
+        TELEGRAM_BOT_TOKEN: "8634703769:AAGVECnXD_iD_bLa0gAoib6jCZjy42-uA1U"
+        TELEGRAM_CHAT_ID: "5815938420"
+      run: |
+        echo "📱 Надсилаю сповіщення в Telegram..."
+        curl -s -X POST "https://api.telegram.org/bot$TELEGRAM_BOT_TOKEN/sendMessage" \
+          -d "chat_id=$TELEGRAM_CHAT_ID" \
+          -d "text=🚀 Wolf Pack Game деплойнуто на Render.com!%0A🌐 https://wolf-pack-game.onrender.com%0A📊 GitHub Actions: https://github.com/NORKONTON/wolf-eggs-game/actions" \
+          -d "parse_mode=HTML"
+          
+    - name: Notify on failure
+      if: failure()
+      env:
+        TELEGRAM_BOT_TOKEN: "8634703769:AAGVECnXD_iD_bLa0gAoib6jCZjy42-uA1U"
+        TELEGRAM_CHAT_ID: "5815938420"
+      run: |
+        echo "❌ Надсилаю сповіщення про помилку..."
+        curl -s -X POST "https://api.telegram.org/bot$TELEGRAM_BOT_TOKEN/sendMessage" \
+          -d "chat_id=$TELEGRAM_CHAT_ID" \
+          -d "text=❌ Помилка деплою Wolf Pack Game!%0A📊 Перевір логи: https://github.com/NORKONTON/wolf-eggs-game/actions" \
+          -d "parse_mode=HTML"

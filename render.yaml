@@ -1,31 +1,38 @@
 # Render.com Configuration for Wolf Pack Game
 services:
-  # Backend API Service
+  # Main Game Server (backend)
   - type: web
-    name: wolf-pack-game-backend
+    name: wolf-pack-game
     env: node
-    buildCommand: cd backend && npm install
-    startCommand: cd backend && npm start
+    region: oregon
+    plan: free
+    rootDir: backend
+    buildCommand: npm install
+    startCommand: npm start
     envVars:
       - key: NODE_ENV
         value: production
       - key: PORT
         value: 8080
-      - key: DATABASE_URL
-        fromDatabase:
-          name: wolfpack-db
-          property: connectionString
-    healthCheckPath: /api/health
+      - key: TELEGRAM_BOT_TOKEN
+        value: 8634703769:AAGVECnXD_iD_bLa0gAoib6jCZjy42-uA1U
+      - key: TON_WALLET_ADDRESS
+        value: UQDW-GZlpaNOupnMe2xTiJfNDKH_aYShyz_18z_BYon9zKpe
+    healthCheckPath: /health
     autoDeploy: true
 
-  # PostgreSQL Database
-  - type: postgres
-    name: wolfpack-db
-    ipAllowList: []
+  # Background Worker (for async tasks)
+  - type: worker
+    name: wolf-pack-worker
+    env: node
+    region: oregon
     plan: free
-
-databases:
-  - name: wolfpack-db
-    databaseName: wolfeggs
-    user: wolfeggs
-    plan: free
+    rootDir: backend
+    buildCommand: npm install
+    startCommand: npm run worker
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: TELEGRAM_BOT_TOKEN
+        value: 8634703769:AAGVECnXD_iD_bLa0gAoib6jCZjy42-uA1U
+    autoDeploy: true
