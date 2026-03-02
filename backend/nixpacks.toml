@@ -1,8 +1,12 @@
 [phases.setup]
-cmds = ["npm install"]
+cmds = ["./build.sh"]
 
 [phases.build]
-cmds = ["echo 'Building Wolf Pack Game...'"]
+cmds = ["echo '🚀 Wolf Pack Game built successfully!'"]
 
 [start]
-cmd = "npm start"
+cmd = "./start.sh"
+
+[variables]
+NODE_ENV = "production"
+PORT = "8080"

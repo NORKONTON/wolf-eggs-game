@@ -1,8 +1,12 @@
 [build]
 builder = "nixpacks"
-buildCommand = "npm install"
-startCommand = "npm start"
+buildCommand = "./build.sh"
+startCommand = "./start.sh"
 
 [deploy]
 healthcheckPath = "/health"
 restartPolicyType = "ON_FAILURE"
+
+[env]
+NODE_ENV = "production"
+PORT = "8080"
