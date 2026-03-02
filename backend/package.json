@@ -1,11 +1,28 @@
 {
   "name": "wolf-pack-game",
   "version": "1.0.0",
+  "description": "Wolf Pack Game - Play-to-Earn TON Game",
   "main": "server.js",
+  "type": "commonjs",
   "scripts": {
-    "start": "node server.js"
+    "start": "node server.js",
+    "build": "echo 'Building Wolf Pack Game...'"
   },
   "dependencies": {
-    "express": "^4.18.2"
-  }
+    "express": "4.18.2",
+    "cors": "2.8.5"
+  },
+  "engines": {
+    "node": "18.x",
+    "npm": "9.x"
+  },
+  "keywords": [
+    "nodejs",
+    "express",
+    "game",
+    "ton",
+    "telegram"
+  ],
+  "author": "NORKONTON",
+  "license": "MIT"
 }
