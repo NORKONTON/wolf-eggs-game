@@ -1,0 +1,35 @@
+{
+  "url": "https://wolfpack.game",
+  "name": "Wolf Pack Game",
+  "iconUrl": "https://wolfpack.game/icon.png",
+  "termsOfUseUrl": "https://wolfpack.game/terms",
+  "privacyPolicyUrl": "https://wolfpack.game/privacy",
+  "manifestVersion": "1.0",
+  "platforms": [
+    "web",
+    "mobile"
+  ],
+  "dapp": {
+    "entrypoint": "https://wolfpack.game",
+    "category": "game",
+    "description": "Catch eggs, earn tokens, join the pack! Telegram play-to-earn game on TON blockchain.",
+    "shortDescription": "Play-to-earn Telegram game",
+    "developer": "Wolf Pack Team",
+    "social": {
+      "twitter": "https://twitter.com/wolfpackgame",
+      "telegram": "https://t.me/WolfPackWeb3",
+      "github": "https://github.com/wolf-pack-game"
+    }
+  },
+  "wallet": {
+    "network": "testnet",
+    "featured": [
+      "tonkeeper",
+      "tonhub",
+      "mytonwallet"
+    ]
+  },
+  "bridge": {
+    "tonconnect": "2.0"
+  }
+}

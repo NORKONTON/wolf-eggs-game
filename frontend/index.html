@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Wolf Catches Eggs - TON Mini App Game</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <script src="https://unpkg.com/@tonconnect/sdk@latest/dist/tonconnect-sdk.min.js"></script>
+    <script src="game.js" defer></script>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🐺 Wolf Catches Eggs 🥚</h1>
+            <p class="subtitle">Earn TON tokens by catching eggs! Invite friends for referral bonuses.</p>
+        </header>
+
+        <div class="game-area">
+            <canvas id="gameCanvas" width="800" height="400"></canvas>
+            <div class="controls">
+                <button id="leftBtn">← Left</button>
+                <button id="rightBtn">→ Right</button>
+                <button id="catchBtn">Catch Egg!</button>
+            </div>
+        </div>
+
+        <div class="stats">
+            <div class="stat-card">
+                <h3>Your Level</h3>
+                <p id="level">1 (Normal)</p>
+            </div>
+            <div class="stat-card">
+                <h3>Balance</h3>
+                <p id="balance">0 tokens</p>
+            </div>
+            <div class="stat-card">
+                <h3>Eggs Caught</h3>
+                <p id="eggsCaught">0</p>
+            </div>
+            <div class="stat-card">
+                <h3>Income/Hour</h3>
+                <p id="incomePerHour">100 tokens</p>
+            </div>
+        </div>
+
+        <div class="upgrade-section">
+            <h2>Upgrade Your Wolf</h2>
+            <div class="upgrade-levels">
+                <div class="level" data-level="1">
+                    <h4>Normal</h4>
+                    <p>Price: 1 TON</p>
+                    <p>Income: 100 tokens/hour</p>
+                    <button class="upgrade-btn" data-level="1">Upgrade</button>
+                </div>
+                <div class="level" data-level="2">
+                    <h4>Medium</h4>
+                    <p>Price: 2 TON</p>
+                    <p>Income: 250 tokens/hour</p>
+                    <button class="upgrade-btn" data-level="2">Upgrade</button>
+                </div>
+                <div class="level" data-level="3">
+                    <h4>Expert</h4>
+                    <p>Price: 5 TON</p>
+                    <p>Income: 700 tokens/hour</p>
+                    <button class="upgrade-btn" data-level="3">Upgrade</button>
+                </div>
+                <div class="level" data-level="4">
+                    <h4>Pro</h4>
+                    <p>Price: 10 TON</p>
+                    <p>Income: 1600 tokens/hour</p>
+                    <button class="upgrade-btn" data-level="4">Upgrade</button>
+                </div>
+                <div class="level" data-level="5">
+                    <h4>Legend</h4>
+                    <p>Price: 20 TON</p>
+                    <p>Income: 3600 tokens/hour</p>
+                    <button class="upgrade-btn" data-level="5">Upgrade</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="referral-section">
+            <h2>Referral Program</h2>
+            <p>Invite friends and earn 25% of their deposits (3 levels)!</p>
+            <div class="referral-link">
+                <input type="text" id="referralLink" readonly value="https://t.me/WolfEggsBot?start=ref_YOURCODE">
+                <button id="copyLinkBtn">Copy Link</button>
+            </div>
+            <div class="referral-stats">
+                <p>Total Referrals: <span id="totalReferrals">0</span></p>
+                <p>Earned from Referrals: <span id="referralEarnings">0 TON</span></p>
+            </div>
+        </div>
+
+        <div class="wallet-section">
+            <h2>Connect TON Wallet</h2>
+            <button id="connectWalletBtn">Connect Wallet</button>
+            <p id="walletAddress">Not connected</p>
+            <div class="deposit-section">
+                <h3>Deposit TON to Upgrade</h3>
+                <input type="number" id="depositAmount" min="1" max="100" placeholder="Amount in TON">
+                <button id="depositBtn">Deposit</button>
+            </div>
+        </div>
+
+        <footer>
+            <p>Wolf Catches Eggs - TON Mini App Game © 2026</p>
+            <p>Contact: @WolfEggsBot on Telegram</p>
+        </footer>
+    </div>
+</body>
+</html>

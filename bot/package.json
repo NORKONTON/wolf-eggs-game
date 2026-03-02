@@ -1,0 +1,20 @@
+{
+  "name": "wolf-eggs-bot",
+  "version": "1.0.0",
+  "description": "Telegram bot for Wolf Catches Eggs Mini App",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js",
+    "dev": "nodemon index.js"
+  },
+  "dependencies": {
+    "node-telegram-bot-api": "^0.61.0",
+    "axios": "^1.5.0",
+    "dotenv": "^16.3.1"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.1"
+  },
+  "author": "Merlin AI Assistant",
+  "license": "MIT"
+}
