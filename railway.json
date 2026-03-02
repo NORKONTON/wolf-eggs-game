@@ -3,13 +3,15 @@
     "builder": "DOCKERFILE",
     "dockerfilePath": "Dockerfile",
     "watchPatterns": [
-      "backend/**"
+      "backend/**",
+      "public/**"
     ]
   },
   "deploy": {
-    "startCommand": "node server.js",
+    "startCommand": "node backend/server.js",
     "healthcheckPath": "/health",
-    "restartPolicyType": "ON_FAILURE"
+    "restartPolicyType": "ON_FAILURE",
+    "restartPolicyMaxRetries": 3
   },
   "env": {
     "NODE_ENV": "production",
