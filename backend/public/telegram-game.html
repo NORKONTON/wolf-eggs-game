@@ -230,20 +230,20 @@
         <!-- Game Stats -->
         <div class="game-stats">
             <div class="stat-card">
-                <div class="stat-value" id="totalWolves">1,000</div>
-                <div class="stat-label">Total Wolves</div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-value" id="activePlayers">88</div>
-                <div class="stat-label">Active Players</div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-value" id="tonBalance">11.51</div>
-                <div class="stat-label">TON in Pool</div>
-            </div>
-            <div class="stat-card">
                 <div class="stat-value" id="userWolves">0</div>
                 <div class="stat-label">Your Wolves</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="totalEggs">0<span id="pendingEggs" style="display:none; font-size:14px;"></span></div>
+                <div class="stat-label">Total Eggs</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="tonBalance">0.00</div>
+                <div class="stat-label">TON Balance</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="totalEarned">0.00</div>
+                <div class="stat-label">Total Earned</div>
             </div>
         </div>
         
@@ -274,11 +274,17 @@
         
         <!-- Game Controls -->
         <div class="game-controls">
-            <button class="btn btn-secondary" onclick="buyWolf()">
-                🐺 Buy Wolf (1 TON)
+            <button class="btn btn-secondary" onclick="buyWolf(0)">
+                🐺 Common Wolf (1 TON)
             </button>
-            <button class="btn btn-secondary" onclick="sellWolf()">
-                💰 Sell Wolf
+            <button class="btn btn-secondary" onclick="buyWolf(1)">
+                🐺 Rare Wolf (5 TON)
+            </button>
+            <button class="btn btn-primary" onclick="collectEggs()">
+                🥚 Collect Eggs
+            </button>
+            <button class="btn btn-primary" onclick="sellEggs()">
+                💰 Sell Eggs
             </button>
             <button class="btn btn-secondary" onclick="openChannel()">
                 📢 Join Channel
@@ -318,24 +324,87 @@
             }
         }
         
-        // Game state
+        // Game state - Wolf Pack Game mechanics
         let gameState = {
+            // Player stats
             wolves: 0,
-            tonBalance: 11.51844,
+            eggs: 0,
+            tonBalance: 0,
+            totalEarned: 0,
+            
+            // Game mechanics
             connected: false,
-            gameActive: false
+            gameActive: false,
+            lastEggCollection: Date.now(),
+            
+            // Wolf types and rates
+            wolfTypes: [
+                { name: 'Common Wolf', price: 1, eggRate: 1, rarity: 'common' },
+                { name: 'Rare Wolf', price: 5, eggRate: 3, rarity: 'rare' },
+                { name: 'Epic Wolf', price: 20, eggRate: 10, rarity: 'epic' },
+                { name: 'Legendary Wolf', price: 100, eggRate: 50, rarity: 'legendary' }
+            ],
+            
+            // Player's wolves
+            playerWolves: []
         };
         
-        // Update game display
+        // Calculate eggs generated since last collection
+        function calculateEggsGenerated() {
+            const now = Date.now();
+            const hoursPassed = (now - gameState.lastEggCollection) / (1000 * 60 * 60);
+            
+            let totalEggs = 0;
+            gameState.playerWolves.forEach(wolf => {
+                totalEggs += wolf.eggRate * hoursPassed;
+            });
+            
+            return Math.floor(totalEggs);
+        }
+        
+        // Update game display with real mechanics
         function updateGameDisplay() {
-            document.getElementById('userWolves').textContent = gameState.wolves;
+            // Calculate pending eggs
+            const pendingEggs = calculateEggsGenerated();
+            const totalEggs = gameState.eggs + pendingEggs;
+            
+            // Update UI
+            document.getElementById('userWolves').textContent = gameState.playerWolves.length;
             document.getElementById('tonBalance').textContent = gameState.tonBalance.toFixed(2);
             document.getElementById('tonStatus').textContent = gameState.connected ? 'Connected' : 'Not connected';
+            
+            // Update eggs display
+            const eggsElement = document.getElementById('totalEggs');
+            if (eggsElement) {
+                eggsElement.textContent = totalEggs;
+            }
+            
+            // Update earned display
+            const earnedElement = document.getElementById('totalEarned');
+            if (earnedElement) {
+                earnedElement.textContent = gameState.totalEarned.toFixed(2);
+            }
+            
+            // Update pending eggs
+            const pendingElement = document.getElementById('pendingEggs');
+            if (pendingElement && pendingEggs > 0) {
+                pendingElement.textContent = `(+${pendingEggs})`;
+                pendingElement.style.display = 'inline';
+            }
             
             if (gameState.connected) {
                 document.getElementById('connectTonButton').textContent = '✅ TON Connected';
                 document.getElementById('connectTonButton').classList.add('btn-primary');
                 document.getElementById('connectTonButton').classList.remove('btn-secondary');
+            }
+            
+            // Update game message based on state
+            if (gameState.playerWolves.length === 0) {
+                document.getElementById('gameMessage').textContent = 'Buy your first wolf to start earning eggs!';
+            } else if (pendingEggs > 0) {
+                document.getElementById('gameMessage').textContent = `Your wolves generated ${pendingEggs} eggs! Collect them.`;
+            } else {
+                document.getElementById('gameMessage').textContent = 'Your wolves are working... Check back later for eggs!';
             }
         }
         
@@ -370,8 +439,8 @@
             tg.HapticFeedback.impactOccurred('medium');
         }
         
-        // Buy wolf
-        function buyWolf() {
+        // Buy wolf with real mechanics
+        function buyWolf(wolfTypeIndex = 0) {
             if (!gameState.connected) {
                 tg.showPopup({
                     title: 'Connect TON First',
@@ -381,12 +450,23 @@
                 return;
             }
             
-            if (gameState.tonBalance >= 1) {
-                gameState.wolves++;
-                gameState.tonBalance -= 1;
+            const wolfType = gameState.wolfTypes[wolfTypeIndex];
+            
+            if (gameState.tonBalance >= wolfType.price) {
+                // Add wolf to player's collection
+                gameState.playerWolves.push({
+                    id: Date.now(),
+                    type: wolfType.name,
+                    price: wolfType.price,
+                    eggRate: wolfType.eggRate,
+                    rarity: wolfType.rarity,
+                    purchasedAt: Date.now()
+                });
+                
+                gameState.tonBalance -= wolfType.price;
                 updateGameDisplay();
                 
-                document.getElementById('gameMessage').textContent = `You bought a wolf! Total: ${gameState.wolves}`;
+                document.getElementById('gameMessage').textContent = `You bought a ${wolfType.rarity} wolf! It generates ${wolfType.eggRate} eggs/day.`;
                 tg.HapticFeedback.notificationOccurred('success');
                 
                 // Send data to backend
@@ -396,13 +476,65 @@
                     body: JSON.stringify({
                         telegramId: user?.id,
                         action: 'buy_wolf',
-                        wolves: gameState.wolves
+                        wolfType: wolfType.name,
+                        price: wolfType.price,
+                        eggRate: wolfType.eggRate
                     })
                 });
             } else {
                 tg.showPopup({
                     title: 'Insufficient TON',
-                    message: 'Not enough TON in the pool.',
+                    message: `You need ${wolfType.price} TON to buy a ${wolfType.rarity} wolf.`,
+                    buttons: [{ type: 'ok' }]
+                });
+            }
+        }
+        
+        // Collect eggs
+        function collectEggs() {
+            const pendingEggs = calculateEggsGenerated();
+            
+            if (pendingEggs > 0) {
+                gameState.eggs += pendingEggs;
+                gameState.lastEggCollection = Date.now();
+                
+                tg.showPopup({
+                    title: 'Eggs Collected!',
+                    message: `You collected ${pendingEggs} eggs from your wolves.`,
+                    buttons: [{ type: 'ok' }]
+                });
+                
+                updateGameDisplay();
+                tg.HapticFeedback.notificationOccurred('success');
+            } else {
+                tg.showPopup({
+                    title: 'No Eggs Yet',
+                    message: 'Your wolves are still working. Check back later!',
+                    buttons: [{ type: 'ok' }]
+                });
+            }
+        }
+        
+        // Sell eggs for TON
+        function sellEggs() {
+            if (gameState.eggs > 0) {
+                const tonEarned = gameState.eggs * 0.1; // 0.1 TON per egg
+                gameState.tonBalance += tonEarned;
+                gameState.totalEarned += tonEarned;
+                gameState.eggs = 0;
+                
+                tg.showPopup({
+                    title: 'Eggs Sold!',
+                    message: `You sold ${gameState.eggs} eggs for ${tonEarned.toFixed(2)} TON.`,
+                    buttons: [{ type: 'ok' }]
+                });
+                
+                updateGameDisplay();
+                tg.HapticFeedback.notificationOccurred('success');
+            } else {
+                tg.showPopup({
+                    title: 'No Eggs to Sell',
+                    message: 'You need to collect eggs first!',
                     buttons: [{ type: 'ok' }]
                 });
             }
